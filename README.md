@@ -127,6 +127,39 @@ Key configuration variables are located at the top of each script:
 *   `EMBEDDING_MODEL_NAME`: The Hugging Face model for embeddings. **Must match between scripts.**
 *   `LLM_MODEL_NAME`: The Google Gemini model identifier. **Must match between scripts.**
 
+
+## ❓ Frequently Asked Questions (FAQ)
+
+**Q1: What plays the role of the vector store? Do I need a separate database?**
+
+**A1:** For this specific implementation, **LlamaIndex itself handles the vector storage using its default capabilities.** When Script 1 runs `VectorStoreIndex.from_documents(...)`, it creates an in-memory vector store. The `index.storage_context.persist(...)` command then saves this store (vectors, text chunks, metadata) to local files within the `PERSIST_DIR` (e.g., `./index_store`). Script 2 loads this index directly from the local files. Therefore, **you do not need to set up or manage a separate external vector database** (like Pinecone, Chroma, Weaviate, etc.) to run this project as provided.
+
+**Q2: Why are there two separate scripts?**
+
+**A2:** This structure provides efficiency. Indexing a large repository (Script 1) can be time-consuming. By saving the index, you only need to do this once per repository. You can then run the querying script (Script 2) multiple times quickly, loading the pre-built index each time without re-processing the entire repository.
+
+**Q3: Can I use this for private GitHub repositories?**
+
+**A3:** The included `gitingest` tool, as used in Script 1, is primarily designed for public repositories. Accessing private repositories would require authentication handling (e.g., using GitHub personal access tokens) which is not implemented in these basic scripts. You would need to modify Script 1 significantly to add authentication for `gitingest` or replace it with a different method (like cloning the repo locally first and then reading the files).
+
+**Q4: How much does it cost?**
+
+**A4:**
+*   The Python libraries (LlamaIndex, Hugging Face, etc.) are open-source and free to use.
+*   Fetching public GitHub data is free.
+*   **Google Gemini Usage:** Using the Google Gemini API (via your API key) may incur costs depending on your usage volume and Google Cloud's pricing tiers. Google often provides a generous free tier, but be sure to check their current pricing details.
+
+**Q5: Can I use a different LLM or embedding model?**
+
+**A5:** Yes! LlamaIndex is flexible. You would need to:
+    1. Install the appropriate LlamaIndex integration package (e.g., `pip install llama-index-llms-openai` or `pip install llama-index-embeddings-openai`).
+    2. Update the configuration variables (`EMBEDDING_MODEL_NAME`, `LLM_MODEL_NAME`) in *both* scripts.
+    3. Modify the import statements and initialization code for the LLM and embedding model in *both* scripts (e.g., replace `Gemini(...)` with `OpenAI(...)` and provide the corresponding API keys).
+
+**Q6: What happens if the repository updates after I index it?**
+
+**A6:** The assistant will only know about the content that was present when you ran Script 1. If the repository has significant updates you want the assistant to know about, you need to re-run `script1_ingest_index.py` to rebuild and save the index with the new content.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to open an issue or submit a pull request for improvements or bug fixes.
